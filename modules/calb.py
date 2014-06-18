@@ -5,16 +5,13 @@ import matplotlib.mlab as mlab
 from matplotlib import dates
 
 import numpy as np
-#import datetime as datetime
-from datetime import datetime, timedelta
-import pylab, random
-import numpy as np
+import pylab
 import pandas as pd
 import random
-from scipy.io.idl import readsav # alternativa a idlsave
-#import idlsave
+from datetime import datetime, timedelta
+
+from scipy.io.idl import readsav
 from IPython.core.display import Image
-#from PIL import Image
 import io
 import base64
 from IPython.display import HTML
@@ -29,71 +26,58 @@ from sunpy import lightcurve as lc
 from sunpy.time import TimeRange
 from sunpy.net import hek
 
-'''
-rc('figure', figsize = (11.69,8.27))#figsize=(8.27,11.69))
-font = {'family' : 'Bitstream Vera Sans',
-        'weight' : 'bold',
-        'size'   : 18}
-matplotlib.rc('font', **font)
-'''
-
 def hola():
     print 'Hello World, this my calibration module'
     return
 
 def lee_sst(file_place):
-    import numpy as np
-    from scipy.io.idl import readsav
-    from datetime import datetime, timedelta
-    from matplotlib import dates
+    """
+    lee archivos '/place/of/file/bi1yymmdd.save' o 
+    '/place/of/file/rs1yymmdd.hh00.save' y devuelve un
+    vector-tiempo (fds) y la estructura completa de da-
+    tos (biors).
+    """
     pathplusfile = file_place 
-    bi=readsav(pathplusfile,python_dict=False)
+    biors = readsav(pathplusfile,python_dict=False)
     yyyy = np.int(pathplusfile[37:39])+2000
     mm = np.int(pathplusfile[39:41])
     dd = np.int(pathplusfile[41:43])
     obsday = int(datetime(yyyy,mm,dd,0,0).strftime('%s'))
-    thatday = obsday + bi.time/1.e4
+    thatday = obsday + biors.time/1.e4
     dts = map(datetime.fromtimestamp,thatday)
     fds = dates.date2num(dts)
-    return fds,bi
+    return fds,biors
 
-def t_plot(fds,bi):
-    import matplotlib.pyplot as plt
-    from matplotlib import dates
-    hfmt = dates.DateFormatter('%H:%M:%S')
-    fig = plt.figure()
-    ax = fig.add_subplot(1,1,1)
-    b1,b2,b3,b4,b5,b6 = ax.plot(fds,bi.adc,'-')
-    ax.xaxis.set_major_formatter(hfmt)
-    #ax.set_xlim(dates.datestr2num('2011/11/03 19:55:00'), dates.datestr2num('2011/11/03 20:00:00'))
-    #ax.xaxis.set_major_locator(dates.MinuteLocator(30))
-    #ax.set_ylim(bottom = 2.0e4,top=2.048e4)
-    #ax.xaxis.set_major_locator(loc)
-    plt.legend([b1,b2,b3,b4,b5,b6], ["beam 1","beam 2","beam 3","beam 4","beam 5","beam 6"], loc='best')
-    plt.xticks(rotation=30)
-    plt.grid()
-    plt.show()
-    return
-
-def modos(bh):
+def modos(biors):
+    """
+    Devuelve en pantalla la lista de modos existentes
+    en el archivo 'biors' y los guarda en el diccionario
+    'opmodict'.
+    """
     modos=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,40,50,55,99]
     opmodict={'0':0,'1':0,'2':0,'3':0,'4':0,'5':0,'6':0,'7':0,'8':0,'9':0,'10':0,'11':0,\
           '12':0,'13':0,'14':0,'15':0,'16':0,'17':0,'18':0,'19':0,'20':0,'21':0,'22':0,\
           '23':0,'40':0,'50':0,'55':0,'99':0}
     for i in modos:
-        xx=np.where(bh.opmode == i)
+        xx=np.where(biors.opmode == i)
         tama = np.size(xx)
         if (tama >  0):
             opmodict[str(i)] = tama
     for i in modos:
-        xx=np.where(bh.opmode == i)
+        xx=np.where(biors.opmode == i)
         tama = np.size(xx)
         if (tama >  0):
             print i, tama
     return opmodict
 
 def taxonomia(fdsh,bh):
-    #import numpy as np
+    """
+    Separa los datos adcval y los correspondientes 
+    vectores-tiempo segun los modos mas comunes del
+    'opmode'. Guarda los datos segregados en el dic-
+    cionario 'taxdict'. Funciona solo con archivos de
+    tipo rs1yymmdd.hh00.save
+    """
     colfds = fdsh[np.where(bh.target/32 == 1)]
     coladc = bh.adcval[np.where(bh.target/32 == 1)]
     hotfds = fdsh[np.where(bh.target/32 == 2)]
@@ -114,19 +98,26 @@ def taxonomia(fdsh,bh):
     stlfds = fdsh[np.where(bh.opmode == 50)]
     unkadc = bh.adcval[np.where(bh.opmode == 99)]
     unkfds = fdsh[np.where(bh.opmode == 99)]
-    taxdict={'coltime':colfds,'colval':coladc,\
-             'hottime':hotfds,'hotval':hotadc,\
-             'trktime':trkfds,'trkval':trkadc,\
-             'maptime':mapfds,'mapval':mapadc,\
-             'mpitime':mpifds,'mpival':mpiadc,\
-             'scntime':scnfds,'scnval':scnadc,\
-             'scitime':scifds,'scival':sciadc,\
-             'tautime':taufds,'tauval':tauadc,\
-             'stltime':stlfds,'stlval':stladc,\
-             'unktime':unkfds,'unkval':unkadc}
+    taxdict={\
+             'coltime':colfds,'colval':coladc\
+             ,'hottime':hotfds,'hotval':hotadc\
+             ,'trktime':trkfds,'trkval':trkadc\
+             ,'maptime':mapfds,'mapval':mapadc\
+             ,'mpitime':mpifds,'mpival':mpiadc\
+             ,'scntime':scnfds,'scnval':scnadc\
+             ,'scitime':scifds,'scival':sciadc\
+             ,'tautime':taufds,'tauval':tauadc\
+             ,'stltime':stlfds,'stlval':stladc\
+             ,'unktime':unkfds,'unkval':unkadc\
+             }
     return taxdict
 
 def colecta(taxdict):
+    """
+    Escoge percentiles 25,50,75  de cada modo esco-
+    gido por 'taxonomia' y compone un diccionario de
+    estadisticas 'origdict'.
+    """
     origdict = {}
     if len(taxdict['colval']) > 0:
         coldadc = taxdict['colval']
@@ -191,6 +182,11 @@ def colecta(taxdict):
     return origdict
 
 def pseudocal(origidict):
+    """
+    Se trata de colocar las estadisticas de obtenidas de
+    'colecta' y almacenados en el dicccionario 'origdict'
+    para hacer la pseudo-calibracion que iguala canales.
+    """
     statdict = {}
     stat1 = [0.0]
     stat2 = [0.0]
