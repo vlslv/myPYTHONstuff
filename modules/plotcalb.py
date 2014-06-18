@@ -1,4 +1,56 @@
+#!/usr/bin/python
+
+import matplotlib.pyplot as plt
+import matplotlib.mlab as mlab
+from matplotlib import dates
+
+import numpy as np
+import pylab
+import pandas as pd
+import random
+from datetime import datetime, timedelta
+
+from scipy.io.idl import readsav
+from IPython.core.display import Image
+import io
+import base64
+from IPython.display import HTML
+
+import sunpy
+from astropy.io import fits
+from sunpy.sun import constants as con
+from sunpy.net.helioviewer import HelioviewerClient
+from sunpy.time import *
+from sunpy.net import vso
+from sunpy import lightcurve as lc
+from sunpy.time import TimeRange
+from sunpy.net import hek
+
+def t_plot(fds,bi):
+    """
+    plota todos los valores 'adc' de la estrutura 'bi'
+    contra el vector-tiempo contenido en 'fds'
+    """
+    hfmt = dates.DateFormatter('%H:%M:%S')
+    fig = plt.figure()
+    ax = fig.add_subplot(1,1,1)
+    b1,b2,b3,b4,b5,b6 = ax.plot(fds,bi.adc,'-')
+    ax.xaxis.set_major_formatter(hfmt)
+    #ax.set_xlim(dates.datestr2num('2011/11/03 19:55:00'), dates.datestr2num('2011/11/03 20:00:00'))
+    #ax.xaxis.set_major_locator(dates.MinuteLocator(30))
+    #ax.set_ylim(bottom = 2.0e4,top=2.048e4)
+    #ax.xaxis.set_major_locator(loc)
+    plt.legend([b1,b2,b3,b4,b5,b6], ["beam 1","beam 2","beam 3","beam 4","beam 5","beam 6"], loc='best')
+    plt.xticks(rotation=30)
+    plt.grid()
+    plt.show()
+    return
+
 def bi_plot(fds,bi):
+    """
+    plota todos los valores 'adc' de la estrutura 'bi'
+    contra el vector-tiempo contenido en 'fds'
+    """
     import matplotlib.pyplot as plt
     from matplotlib import dates
     hfmt = dates.DateFormatter('%H:%M:%S')
@@ -17,6 +69,10 @@ def bi_plot(fds,bi):
     return
 
 def rs_plot(fds,bi):
+    """
+    plota todos los 'adcval' de la estrutura 
+    'rs' contra el vector-tiempo contenido en fds
+    """
     import matplotlib.pyplot as plt
     from matplotlib import dates
     hfmt = dates.DateFormatter('%H:%M:%S')
@@ -35,6 +91,11 @@ def rs_plot(fds,bi):
     return
 
 def caja(taxdict,ybot,ytop):
+    """
+    Boxplots del contenido del dictionario (taxdict)
+    devuelto por la funcion 'taxonomia'. Se tiene que
+    introducir los limites del eje vertical: 'ybot', 'ytop'.
+    """
     import matplotlib.pyplot as plt
     fig = plt.figure(figsize=(11.69*1.5,8.27*1.5))
     ax = fig.add_subplot(191)
@@ -95,6 +156,12 @@ def caja(taxdict,ybot,ytop):
     return
 
 def tx_plot(taxdict,str_key):
+    """
+    Plot de los adcval de cualquiera de las variables segregadas
+    segun el diccionario (taxdict) devuelto por la funcion 'taxonomia'.
+    Se tiene que entrar con la clave (str_key) para escoger el modo, la
+    misma que aparece en los titulos del grafico porducido por 'caja'.
+    """
     strfds = str_key+'time'
     stradc = str_key+'val'
     hfmt = dates.DateFormatter('%H:%M:%S')
@@ -115,6 +182,11 @@ def tx_plot(taxdict,str_key):
     return
 
 def st_plot(statdict):
+    """
+    Plot de la relacion lineal entre las estadisticas
+    de cada canal de 212 GHz en relacion al canal 1 y
+    del canal 5 (405 GHz) en relacion al canal 6
+    """
     fig = plt.figure()
     ax1 = fig.add_subplot(1,2,1)
     ax1.plot(statdict['stat01'],statdict['stat01'],'bo')
